@@ -10,3 +10,7 @@ def hello_world():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+# remember requirements.text
+# source venv/scripts/activate
