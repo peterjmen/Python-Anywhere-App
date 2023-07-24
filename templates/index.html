@@ -1,15 +1,21 @@
-<h1>Welcome to index.html in templates</h1>
+{% extends 'base.html' %}
 
-<p>Flask app going ahead</p>
+{% block content %}
+    <h1>Welcome to index.html in templates</h1>
 
-<h2> 'ello {{first_name}}</h2>
-<p>{{ bold_words | safe }}</p>
+    <p>Flask app going ahead</p>
 
-{% for item in token_list %}
-    {% if item == "shoes" %}
-        {{"I like "}}
-    {% endif %}
-    <li>{{item}}</li>
-    <!-- or item<br/ -->
-    <!-- token_list.0 would access the 0th thing in the list -->
-{% endfor %}
+    <h2> 'ello {{first_name}}</h2>
+    <p>{{ bold_words | safe }}</p>
+
+    {% for item in token_list %}
+        {% if item == "shoes" %}
+            {{"I like "}}
+        {% endif %}
+        <li>{{item}}</li>
+        <!-- or item<br/ -->
+        <!-- token_list.0 would access the 0th thing in the list -->
+    {% endfor %}
+
+
+{% endblock %}
