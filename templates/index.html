@@ -1,3 +1,15 @@
-<h1>Hello world</h1>
+<h1>Welcome to index.html in templates</h1>
 
-<p>This is my first webpage</p>
+<p>Flask app going ahead</p>
+
+<h2> 'ello {{first_name}}</h2>
+<p>{{ bold_words | safe }}</p>
+
+{% for item in token_list %}
+    {% if item == "shoes" %}
+        {{"I like "}}
+    {% endif %}
+    <li>{{item}}</li>
+    <!-- or item<br/ -->
+    <!-- token_list.0 would access the 0th thing in the list -->
+{% endfor %}
