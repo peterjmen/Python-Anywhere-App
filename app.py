@@ -1,9 +1,7 @@
-# ! *^*^*^*^*^**^*^*^*^*^**^*^*^*^*^*^*^**^*^*^*^*^*^*^ #
-# TODO *^*^*^*^*^**^*^*^*^**^*^*^*^*^*^*^*^**^*^*^*^*^* #
-# * 👉 ➡➡➡ source venv/Scripts/activate ⬅⬅⬅ 👈    #
-# TODO *^*^*^*^*^**^*^*^*^**^*^*^*^*^**^*^*^*^**^*^*^*^ #
-# ! *^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^^*^*^*^*^*^*^*^*^*^ #
-
+# ---------------------------------------------
+# TODO: Activate the virtual environment
+# ➡➡➡ source venv/Scripts/activate ⬅⬅⬅
+# ---------------------------------------------
 
 from flask import Flask, render_template, request
 
@@ -67,13 +65,12 @@ def get_sentiment_category(rating):
     else:
         return "Unknown"
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     selected_article = None
     if request.method == "POST":
         sentiment_filter = request.form.get("sentiment")
-        if sentiment_filter == "All":
+        if sentiment_filter == "All" or not sentiment_filter:
             filtered_news = sample_news
         else:
             sentiment_rating = ["Very Negative", "Negative", "Neutral", "Positive", "Very Positive"].index(sentiment_filter)
@@ -86,23 +83,17 @@ def index():
 
 @app.route('/user/<name>')
 def user(name):
-    # your code here
     return render_template('user.html', name=name)
 
-
-    # Custom error pages
-# flask mechanism to handle errors:
-
-# invalid url ⬇
+# Custom error pages
+# Flask mechanism to handle errors:
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
 
-
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template("500.html"), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
