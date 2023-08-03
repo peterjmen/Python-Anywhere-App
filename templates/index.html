@@ -3,16 +3,25 @@
 {% block content %}
     <h1>Welcome to News Filter</h1>
 
-    <form method="POST">
+    <form method="POST" style="display: flex; gap: 10px;">
+        <!-- Sentiment Filter -->
         <label for="sentiment">Select Sentiment:</label>
         <select id="sentiment" name="sentiment">
             <option value="All">All</option>
-            <option value="Positive">Positive</option>
-            <option value="Neutral">Neutral</option>
-            <option value="Negative">Negative</option>
-            <option value="Very Positive">Very Positive</option>
             <option value="Very Negative">Very Negative</option>
+            <option value="Negative">Negative</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Positive">Positive</option>
+            <option value="Very Positive">Very Positive</option>
         </select>
+
+        <!-- Language Filter -->
+        <label for="language">Select Language:</label>
+        <select id="language" name="language">
+            <option value="English">English</option>
+            <option value="Not English">Not English</option>
+        </select>
+
         <button type="submit">Filter</button>
     </form>
 
@@ -26,7 +35,6 @@
                     {% for article in news %}
                         <li>
                             <form method="POST">
-                                <input type="hidden" name="sentiment" value="{{ request.form.sentiment }}">
                                 <input type="hidden" name="selected_article" value="{{ article.headline }}">
                                 <button type="submit">
                                     <strong>{{ article.headline }}</strong><br>
@@ -52,43 +60,19 @@
                         <div class="evaluation">
                             <h3>Evaluation:</h3>
                             <fieldset>
-                                <legend>Mood:</legend>
-                                <input type="radio" id="good" name="mood" value="Good">
-                                <label for="good">Good</label>
-                                <input type="radio" id="bad" name="mood" value="Bad">
-                                <label for="bad">Bad</label>
-                                <input type="radio" id="neutral" name="mood" value="Neutral">
-                                <label for="neutral">Neutral</label>
-                            </fieldset>
-                            <fieldset>
-                                <legend>Mental Health:</legend>
-                                <input type="radio" id="good_mh" name="mental_health" value="Good">
-                                <label for="good_mh">Good</label>
-                                <input type="radio" id="bad_mh" name="mental_health" value="Bad">
-                                <label for="bad_mh">Bad</label>
-                                <input type="radio" id="neutral_mh" name="mental_health" value="Neutral">
-                                <label for="neutral_mh">Neutral</label>
-                            </fieldset>
-                            <fieldset>
                                 <legend>Article Sentiment:</legend>
-                                <input type="radio" id="vn" name="article_sentiment" value="Very Negative">
-                                <label for="vn">Very Negative</label>
-                                <input type="radio" id="n" name="article_sentiment" value="Negative">
-                                <label for="n">Negative</label>
-                                <input type="radio" id="nt" name="article_sentiment" value="Neutral">
-                                <label for="nt">Neutral</label>
-                                <input type="radio" id="p" name="article_sentiment" value="Positive">
-                                <label for="p">Positive</label>
-                                <input type="radio" id="vp" name="article_sentiment" value="Very Positive">
-                                <label for="vp">Very Positive</label>
+                                <input type="radio" id="1" name="article_sentiment" value="1">
+                                <label for="1"><span role="img" aria-label="very unhappy">😞</span> Very Negative</label><br>
+                                <input type="radio" id="2" name="article_sentiment" value="2">
+                                <label for="2"><span role="img" aria-label="unhappy">😟</span> Negative</label><br>
+                                <input type="radio" id="3" name="article_sentiment" value="3">
+                                <label for="3"><span role="img" aria-label="neutral">😐</span> Neutral</label><br>
+                                <input type="radio" id="4" name="article_sentiment" value="4">
+                                <label for="4"><span role="img" aria-label="happy">😊</span> Positive</label><br>
+                                <input type="radio" id="5" name="article_sentiment" value="5">
+                                <label for="5"><span role="img" aria-label="very happy">😄</span> Very Positive</label><br>
                             </fieldset>
-                            <script>
-                                function showAlert(event) {
-                                    event.preventDefault(); // prevent form submission
-                                    alert("Not implemented yet, sorry!");
-                                }
-                                </script>
-                            <button type="submit" onclick="showAlert(event)">Submit Evaluation</button>
+                            <button type="submit">Submit Evaluation</button>
                         </div>
                     </form>
                 {% endfor %}

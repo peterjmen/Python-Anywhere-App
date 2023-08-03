@@ -51,35 +51,49 @@ sample_news = [
     }
 ]
 
-def get_sentiment_category(rating):
-    if rating == 0:
-        return "Very Negative"
-    elif rating == 1:
-        return "Negative"
-    elif rating == 2:
-        return "Neutral"
-    elif rating == 3:
-        return "Positive"
-    elif rating == 4:
-        return "Very Positive"
-    else:
-        return "Unknown"
+@app.context_processor
+def utility_processor():
+    def get_sentiment_category(rating):
+        if rating == "All":
+            return "All"
+        rating = int(rating)
+        if rating == 0:
+            return "Very Negative"
+        elif rating == 1:
+            return "Negative"
+        elif rating == 2:
+            return "Neutral"
+        elif rating == 3:
+            return "Positive"
+        elif rating == 4:
+            return "Very Positive"
+        else:
+            return "Unknown"
+
+    # Return a dictionary of functions to make them available in templates
+    return dict(get_sentiment_category=get_sentiment_category)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     selected_article = None
+    filtered_news = sample_news  # Show all news by default
     if request.method == "POST":
-        sentiment_filter = request.form.get("sentiment")
-        if sentiment_filter == "All" or not sentiment_filter:
-            filtered_news = sample_news
-        else:
+        # Sentiment Filter
+        sentiment_filter = request.form.get("sentiment", "All")  # Default value is "All" if not selected
+        # Language Filter
+        language_filter = request.form.get("language")
+
+        if sentiment_filter != "All":
             sentiment_rating = ["Very Negative", "Negative", "Neutral", "Positive", "Very Positive"].index(sentiment_filter)
             filtered_news = [news for news in sample_news if news.get("rated_sentiment") == sentiment_rating]
-        selected_article = request.form.get("selected_article")
-    else:
-        filtered_news = sample_news  # Show all news by default
 
-    return render_template("index.html", news=filtered_news, selected_article=selected_article, get_sentiment_category=get_sentiment_category)
+        if language_filter == "Not English":
+            filtered_news = [news for news in filtered_news if news.get("language", "English") != "English"]
+
+        selected_article = request.form.get("selected_article")
+
+    return render_template('index.html', news=filtered_news, selected_article=selected_article)
+
 
 @app.route('/user/<name>')
 def user(name):
