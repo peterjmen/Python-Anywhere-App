@@ -1,21 +1,100 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Welcome to index.html in templates</h1>
+    <h1>Welcome to News Filter</h1>
 
-    <p>Flask app going ahead</p>
+    <form method="POST">
+        <label for="sentiment">Select Sentiment:</label>
+        <select id="sentiment" name="sentiment">
+            <option value="All">All</option>
+            <option value="Positive">Positive</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Negative">Negative</option>
+            <option value="Very Positive">Very Positive</option>
+            <option value="Very Negative">Very Negative</option>
+        </select>
+        <button type="submit">Filter</button>
+    </form>
 
-    <h2> 'ello {{first_name}}</h2>
-    <p>{{ bold_words | safe }}</p>
+    <hr>
+    <h2>Filtered News:</h2>
 
-    {% for item in token_list %}
-        {% if item == "shoes" %}
-            {{"I like "}}
-        {% endif %}
-        <li>{{item}}</li>
-        <!-- or item<br/ -->
-        <!-- token_list.0 would access the 0th thing in the list -->
-    {% endfor %}
+    <div class="row">
+        <div class="col-md-4">
+            {% if news %}
+                <ul>
+                    {% for article in news %}
+                        <li>
+                            <form method="POST">
+                                <input type="hidden" name="sentiment" value="{{ request.form.sentiment }}">
+                                <input type="hidden" name="selected_article" value="{{ article.headline }}">
+                                <button type="submit">
+                                    <strong>{{ article.headline }}</strong><br>
+                                    Category: {{ article.category }}<br>
+                                    Country: {{ article.country }}<br>
+                                    Sentiment: {{ get_sentiment_category(article.rated_sentiment) }}<br>
+                                </button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No news found.</p>
+            {% endif %}
+        </div>
 
-
+        <div class="col-md-8">
+            {% if selected_article %}
+                {% for article in news if article.headline == selected_article %}
+                    <h2>{{ article.headline }}</h2>
+                    <form method="POST">
+                        <p>{{ article.content }}</p>
+                        <div class="evaluation">
+                            <h3>Evaluation:</h3>
+                            <fieldset>
+                                <legend>Mood:</legend>
+                                <input type="radio" id="good" name="mood" value="Good">
+                                <label for="good">Good</label>
+                                <input type="radio" id="bad" name="mood" value="Bad">
+                                <label for="bad">Bad</label>
+                                <input type="radio" id="neutral" name="mood" value="Neutral">
+                                <label for="neutral">Neutral</label>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Mental Health:</legend>
+                                <input type="radio" id="good_mh" name="mental_health" value="Good">
+                                <label for="good_mh">Good</label>
+                                <input type="radio" id="bad_mh" name="mental_health" value="Bad">
+                                <label for="bad_mh">Bad</label>
+                                <input type="radio" id="neutral_mh" name="mental_health" value="Neutral">
+                                <label for="neutral_mh">Neutral</label>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Article Sentiment:</legend>
+                                <input type="radio" id="vn" name="article_sentiment" value="Very Negative">
+                                <label for="vn">Very Negative</label>
+                                <input type="radio" id="n" name="article_sentiment" value="Negative">
+                                <label for="n">Negative</label>
+                                <input type="radio" id="nt" name="article_sentiment" value="Neutral">
+                                <label for="nt">Neutral</label>
+                                <input type="radio" id="p" name="article_sentiment" value="Positive">
+                                <label for="p">Positive</label>
+                                <input type="radio" id="vp" name="article_sentiment" value="Very Positive">
+                                <label for="vp">Very Positive</label>
+                            </fieldset>
+                            <script>
+                                function showAlert(event) {
+                                    event.preventDefault(); // prevent form submission
+                                    alert("Not implemented yet, sorry!");
+                                }
+                                </script>
+                            <button type="submit" onclick="showAlert(event)">Submit Evaluation</button>
+                        </div>
+                    </form>
+                {% endfor %}
+            {% else %}
+                <p>No article selected.</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
