@@ -3,23 +3,36 @@
 {% block content %}
     <h1>Welcome to News Filter</h1>
 
-    <form method="POST" style="display: flex; gap: 10px;">
+    <form method="POST" style="display: flex; flex-wrap: wrap; gap: 10px;">
         <!-- Sentiment Filter -->
         <label for="sentiment">Select Sentiment:</label>
         <select id="sentiment" name="sentiment">
-            <option value="All">All</option>
-            <option value="Very Negative">Very Negative</option>
-            <option value="Negative">Negative</option>
-            <option value="Neutral">Neutral</option>
-            <option value="Positive">Positive</option>
-            <option value="Very Positive">Very Positive</option>
+            <option value="All" {% if sentiment_filter == "All" %}selected{% endif %}>All</option>
+            <option value="Very Negative" {% if sentiment_filter == "Very Negative" %}selected{% endif %}>Very Negative</option>
+            <option value="Negative" {% if sentiment_filter == "Negative" %}selected{% endif %}>Negative</option>
+            <option value="Neutral" {% if sentiment_filter == "Neutral" %}selected{% endif %}>Neutral</option>
+            <option value="Positive" {% if sentiment_filter == "Positive" %}selected{% endif %}>Positive</option>
+            <option value="Very Positive" {% if sentiment_filter == "Very Positive" %}selected{% endif %}>Very Positive</option>
         </select>
 
-        <!-- Language Filter -->
-        <label for="language">Select Language:</label>
-        <select id="language" name="language">
-            <option value="English">English</option>
-            <option value="Not English">Not English</option>
+        <!-- Category Filter -->
+        <label for="category">Select Category:</label>
+        <select id="category" name="category">
+            <option value="All" {% if category_filter == "All" %}selected{% endif %}>All</option>
+            <option value="Politics" {% if category_filter == "Politics" %}selected{% endif %}>Politics</option>
+            <option value="Sports" {% if category_filter == "Sports" %}selected{% endif %}>Sports</option>
+            <option value="Entertainment" {% if category_filter == "Entertainment" %}selected{% endif %}>Entertainment</option>
+            <!-- Add other categories here -->
+        </select>
+
+        <!-- Country Filter -->
+        <label for="country">Select Country:</label>
+        <select id="country" name="country">
+            <option value="All" {% if country_filter == "All" %}selected{% endif %}>All</option>
+            <option value="USA" {% if country_filter == "USA" %}selected{% endif %}>USA</option>
+            <option value="UK" {% if country_filter == "UK" %}selected{% endif %}>UK</option>
+            <option value="Australia" {% if country_filter == "Australia" %}selected{% endif %}>Australia</option>
+            <!-- Add other countries here -->
         </select>
 
         <button type="submit">Filter</button>

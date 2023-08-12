@@ -1,55 +1,14 @@
 # ---------------------------------------------
 # TODO: Activate the virtual environment
 # ➡➡➡ source venv/Scripts/activate ⬅⬅⬅
+# ls -R > file_structure.txt
 # ---------------------------------------------
 
 from flask import Flask, render_template, request
+from templates.sample_news import sample_news
 
 app = Flask(__name__)
 
-# Sample news data (you can replace this with real data from NewsAPI)
-sample_news = [
-    {
-        "headline": "Sad News 1",
-        "category": "Politics",
-        "country": "UK",
-        "sentiment": "Negative",
-        "rated_sentiment": 0,  # Rating: 0 (Very Negative)
-        "content": "Today's political news in the UK was filled with disappointment and sadness. The developments in the political landscape left citizens feeling disheartened and unsatisfied with the outcomes. It seems like there's no end to the mehness in the political realm lately..."
-    },
-    {
-        "headline": "Meh News 2",
-        "category": "Sports",
-        "country": "Australia",
-        "sentiment": "Negative",
-        "rated_sentiment": 1,  # Rating: 1 (Negative)
-        "content": "This is a meh news article about meh news in the sports world. It seems like there was not much excitement or thrill in today's sports events. Fans were left feeling indifferent and unimpressed with the outcomes. The lack of intense competition and captivating moments made it a meh day for sports enthusiasts."
-    },
-    {
-        "headline": "Neutral News 3",
-        "category": "Entertainment",
-        "country": "Canada",
-        "sentiment": "Neutral",
-        "rated_sentiment": 2,  # Rating: 2 (Neutral)
-        "content": "Today's entertainment news was quite meh. There were no groundbreaking announcements or scandals that grabbed people's attention. Instead, the news consisted of average updates about celebrities and the entertainment industry, leaving readers with a sense of neutrality and indifference."
-    },
-    {
-        "headline": "Decent News 4",
-        "category": "Health",
-        "country": "Germany",
-        "sentiment": "Positive",
-        "rated_sentiment": 3,  # Rating: 3 (Positive)
-        "content": "In the health sector, there were some decent news and developments in Germany. Progress was made in various areas, offering hope and optimism for better healthcare in the future. Although it was not groundbreaking news, the positive strides in health-related matters brought a sense of contentment and satisfaction."
-    },
-    {
-        "headline": "Happy News 5",
-        "category": "Technology",
-        "country": "USA",
-        "sentiment": "Very Positive",
-        "rated_sentiment": 4,  # Rating: 4 (Very Positive)
-        "content": "Today's technology news was filled with exciting and innovative breakthroughs in the USA. From cutting-edge gadgets to revolutionary advancements, tech enthusiasts were delighted by the positive developments. The tech industry has certainly been thriving, and the news brought joy and happiness to all those following the latest trends and innovations."
-    }
-]
 
 @app.context_processor
 def utility_processor():
@@ -70,44 +29,79 @@ def utility_processor():
         else:
             return "Unknown"
 
-    # Return a dictionary of functions to make them available in templates
     return dict(get_sentiment_category=get_sentiment_category)
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     selected_article = None
     filtered_news = sample_news  # Show all news by default
+    sentiment_filter = "All"  # Default sentiment filter value
+    category_filter = "All"  # Default category filter value
+    country_filter = "All"  # Default country filter value
+
     if request.method == "POST":
         # Sentiment Filter
-        sentiment_filter = request.form.get("sentiment", "All")  # Default value is "All" if not selected
-        # Language Filter
-        language_filter = request.form.get("language")
+        sentiment_filter = request.form.get("sentiment", "All")
 
         if sentiment_filter != "All":
-            sentiment_rating = ["Very Negative", "Negative", "Neutral", "Positive", "Very Positive"].index(sentiment_filter)
-            filtered_news = [news for news in sample_news if news.get("rated_sentiment") == sentiment_rating]
+            sentiment_rating = [
+                "Very Negative",
+                "Negative",
+                "Neutral",
+                "Positive",
+                "Very Positive",
+            ].index(sentiment_filter)
+            filtered_news = [
+                news
+                for news in sample_news
+                if news.get("rated_sentiment") == sentiment_rating
+            ]
 
-        if language_filter == "Not English":
-            filtered_news = [news for news in filtered_news if news.get("language", "English") != "English"]
+        # Category Filter
+        category_filter = request.form.get("category", "All")
+
+        if category_filter != "All":
+            filtered_news = [
+                news
+                for news in filtered_news
+                if news.get("category") == category_filter
+            ]
+
+        # Country Filter
+        country_filter = request.form.get("country", "All")
+
+        if country_filter != "All":
+            filtered_news = [
+                news for news in filtered_news if news.get("country") == country_filter
+            ]
 
         selected_article = request.form.get("selected_article")
 
-    return render_template('index.html', news=filtered_news, selected_article=selected_article)
+    return render_template(
+        "index.html",
+        news=filtered_news,
+        selected_article=selected_article,
+        sentiment_filter=sentiment_filter,
+        category_filter=category_filter,
+        country_filter=country_filter,
+    )
 
 
-@app.route('/user/<name>')
+@app.route("/user/<name>")
 def user(name):
-    return render_template('user.html', name=name)
+    return render_template("user.html", name=name)
 
-# Custom error pages
-# Flask mechanism to handle errors:
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
 
+
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template("500.html"), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
