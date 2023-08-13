@@ -1,106 +1,122 @@
-# ---------------------------------------------
-# TODO: Activate the virtual environment
-# ➡➡➡ source venv/Scripts/activate ⬅⬅⬅
-# ls -R > file_structure.txt
-# ---------------------------------------------
-
 from flask import Flask, render_template, request
-from templates.sample_news import sample_news
+import requests
+from newspaper import Article
+from datetime import datetime
 
 app = Flask(__name__)
+NEWS_API_KEY = "c90bf5366948496b842fa35d8776398c"
+
+COUNTRIES = [
+    "us",  # United States
+    "gb",  # United Kingdom
+    "ca",  # Canada
+    "au",  # Australia
+    "in",  # India
+    "za",  # South Africa
+    "nz",  # New Zealand
+    "sg",  # Singapore
+    "ie",  # Ireland
+    "ph",  # Philippines
+]
+
+KEYWORDS = ["New Zealand"]
+
+CATEGORIES = [
+    "business",
+    "entertainment",
+    "general",
+    "health",
+    "science",
+    "sports",
+    "technology",
+]
 
 
-@app.context_processor
-def utility_processor():
-    def get_sentiment_category(rating):
-        if rating == "All":
-            return "All"
-        rating = int(rating)
-        if rating == 0:
-            return "Very Negative"
-        elif rating == 1:
-            return "Negative"
-        elif rating == 2:
-            return "Neutral"
-        elif rating == 3:
-            return "Positive"
-        elif rating == 4:
-            return "Very Positive"
-        else:
-            return "Unknown"
+def fetch_sources(country=None):
+    url = f"https://newsapi.org/v2/sources?apiKey={NEWS_API_KEY}&language=en"
+    if country and country != "all":
+        url += f"&country={country}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return []
+    return response.json().get("sources", [])
 
-    return dict(get_sentiment_category=get_sentiment_category)
+
+def fetch_articles(
+    country="us",
+    category="general",
+    keyword="New Zealand",
+    from_date=None,
+    to_date=None,
+):
+    sources = [source["id"] for source in fetch_sources(country)]
+    sources = ",".join(sources)
+
+    url = f"https://newsapi.org/v2/everything?apiKey={NEWS_API_KEY}&language=en&pageSize=100&sources={sources}"
+
+    if category != "all":
+        url += f"&category={category}"
+
+    if keyword and keyword != "All":
+        url += f"&qInTitle={keyword}"
+
+    if from_date:
+        url += f"&from={from_date}"
+
+    if to_date:
+        url += f"&to={to_date}"
+
+    response = requests.get(url)
+    if response.status_code != 200:
+        print("Failed to fetch articles:")
+        print("Status Code:", response.status_code)
+        print("Response:", response.text)
+        return []
+    articles = response.json().get("articles", [])
+
+    for article in articles:
+        article["publishedAt"] = datetime.strptime(
+            article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"
+        ).strftime("%b %d, %Y %H:%M:%S")
+
+    return sorted(articles, key=lambda x: x["publishedAt"], reverse=True)
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    selected_article = None
-    filtered_news = sample_news  # Show all news by default
-    sentiment_filter = "All"  # Default sentiment filter value
-    category_filter = "All"  # Default category filter value
-    country_filter = "All"  # Default country filter value
+    selected_country = "nz"
+    selected_category = "all"
+    selected_keyword = "New Zealand"
+    sources = fetch_sources()
+    articles = []
 
     if request.method == "POST":
-        # Sentiment Filter
-        sentiment_filter = request.form.get("sentiment", "All")
+        selected_country = request.form.get("country", "nz")
+        selected_category = request.form.get("category", "all")
+        selected_keyword = request.form.get("keyword", "New Zealand")
+        articles = fetch_articles(selected_country, selected_category, selected_keyword)
 
-        if sentiment_filter != "All":
-            sentiment_rating = [
-                "Very Negative",
-                "Negative",
-                "Neutral",
-                "Positive",
-                "Very Positive",
-            ].index(sentiment_filter)
-            filtered_news = [
-                news
-                for news in sample_news
-                if news.get("rated_sentiment") == sentiment_rating
-            ]
-
-        # Category Filter
-        category_filter = request.form.get("category", "All")
-
-        if category_filter != "All":
-            filtered_news = [
-                news
-                for news in filtered_news
-                if news.get("category") == category_filter
-            ]
-
-        # Country Filter
-        country_filter = request.form.get("country", "All")
-
-        if country_filter != "All":
-            filtered_news = [
-                news for news in filtered_news if news.get("country") == country_filter
-            ]
-
-        selected_article = request.form.get("selected_article")
+        for article in articles:
+            try:
+                article_url = article.get("url", "")
+                article_obj = Article(article_url)
+                article_obj.download()
+                article_obj.parse()
+                article["content"] = article_obj.text
+            except Exception as e:
+                article["content"] = "Failed to fetch content"
 
     return render_template(
         "index.html",
-        news=filtered_news,
-        selected_article=selected_article,
-        sentiment_filter=sentiment_filter,
-        category_filter=category_filter,
-        country_filter=country_filter,
+        articles=articles,
+        sources=sources,
+        countries=COUNTRIES,
+        keywords=KEYWORDS,
+        categories=CATEGORIES,
+        selected_country=selected_country,
+        selected_category=selected_category,
+        selected_keyword=selected_keyword,
     )
-
-
-@app.route("/user/<name>")
-def user(name):
-    return render_template("user.html", name=name)
-
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template("404.html"), 404
-
-
-@app.errorhandler(500)
-def page_not_found(e):
-    return render_template("500.html"), 500
 
 
 if __name__ == "__main__":

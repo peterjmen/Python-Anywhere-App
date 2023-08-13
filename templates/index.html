@@ -1,97 +1,88 @@
-{% extends 'base.html' %}
-
-{% block content %}
-    <h1>Welcome to News Filter</h1>
-
-    <form method="POST" style="display: flex; flex-wrap: wrap; gap: 10px;">
-        <!-- Sentiment Filter -->
-        <label for="sentiment">Select Sentiment:</label>
-        <select id="sentiment" name="sentiment">
-            <option value="All" {% if sentiment_filter == "All" %}selected{% endif %}>All</option>
-            <option value="Very Negative" {% if sentiment_filter == "Very Negative" %}selected{% endif %}>Very Negative</option>
-            <option value="Negative" {% if sentiment_filter == "Negative" %}selected{% endif %}>Negative</option>
-            <option value="Neutral" {% if sentiment_filter == "Neutral" %}selected{% endif %}>Neutral</option>
-            <option value="Positive" {% if sentiment_filter == "Positive" %}selected{% endif %}>Positive</option>
-            <option value="Very Positive" {% if sentiment_filter == "Very Positive" %}selected{% endif %}>Very Positive</option>
-        </select>
-
-        <!-- Category Filter -->
-        <label for="category">Select Category:</label>
-        <select id="category" name="category">
-            <option value="All" {% if category_filter == "All" %}selected{% endif %}>All</option>
-            <option value="Politics" {% if category_filter == "Politics" %}selected{% endif %}>Politics</option>
-            <option value="Sports" {% if category_filter == "Sports" %}selected{% endif %}>Sports</option>
-            <option value="Entertainment" {% if category_filter == "Entertainment" %}selected{% endif %}>Entertainment</option>
-            <!-- Add other categories here -->
-        </select>
-
-        <!-- Country Filter -->
-        <label for="country">Select Country:</label>
-        <select id="country" name="country">
-            <option value="All" {% if country_filter == "All" %}selected{% endif %}>All</option>
-            <option value="USA" {% if country_filter == "USA" %}selected{% endif %}>USA</option>
-            <option value="UK" {% if country_filter == "UK" %}selected{% endif %}>UK</option>
-            <option value="Australia" {% if country_filter == "Australia" %}selected{% endif %}>Australia</option>
-            <!-- Add other countries here -->
-        </select>
-
-        <button type="submit">Filter</button>
-    </form>
-
-    <hr>
-    <h2>Filtered News:</h2>
-
-    <div class="row">
-        <div class="col-md-4">
-            {% if news %}
-                <ul>
-                    {% for article in news %}
-                        <li>
-                            <form method="POST">
-                                <input type="hidden" name="selected_article" value="{{ article.headline }}">
-                                <button type="submit">
-                                    <strong>{{ article.headline }}</strong><br>
-                                    Category: {{ article.category }}<br>
-                                    Country: {{ article.country }}<br>
-                                    Sentiment: {{ get_sentiment_category(article.rated_sentiment) }}<br>
-                                </button>
-                            </form>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No news found.</p>
-            {% endif %}
-        </div>
-
-        <div class="col-md-8">
-            {% if selected_article %}
-                {% for article in news if article.headline == selected_article %}
-                    <h2>{{ article.headline }}</h2>
-                    <form method="POST">
-                        <p>{{ article.content }}</p>
-                        <div class="evaluation">
-                            <h3>Evaluation:</h3>
-                            <fieldset>
-                                <legend>Article Sentiment:</legend>
-                                <input type="radio" id="1" name="article_sentiment" value="1">
-                                <label for="1"><span role="img" aria-label="very unhappy">😞</span> Very Negative</label><br>
-                                <input type="radio" id="2" name="article_sentiment" value="2">
-                                <label for="2"><span role="img" aria-label="unhappy">😟</span> Negative</label><br>
-                                <input type="radio" id="3" name="article_sentiment" value="3">
-                                <label for="3"><span role="img" aria-label="neutral">😐</span> Neutral</label><br>
-                                <input type="radio" id="4" name="article_sentiment" value="4">
-                                <label for="4"><span role="img" aria-label="happy">😊</span> Positive</label><br>
-                                <input type="radio" id="5" name="article_sentiment" value="5">
-                                <label for="5"><span role="img" aria-label="very happy">😄</span> Very Positive</label><br>
-                            </fieldset>
-                            <button type="submit">Submit Evaluation</button>
-                        </div>
-                    </form>
-                {% endfor %}
-            {% else %}
-                <p>No article selected.</p>
-            {% endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentifeed</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f3f3f3;
+        }
+        .article-list {
+            height: 500px;
+            overflow-y: scroll;
+        }
+        .article-preview {
+            border: 1px solid #ccc;
+            padding: 15px;
+            cursor: pointer;
+            background-color: white;
+        }
+        .article-preview:hover {
+            background-color: #f0f0f0;
+        }
+        .article-active {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4" style="background-color: #4CAF50;">
+        <div class="container text-white">
+            <h1>Sentifeed</h1>
+            <p>Search news by keyword</p>
         </div>
     </div>
-{% endblock %}
+    <div class="container my-2">
+        <form method="POST" class="mb-4">
+            <div class="row">
+                <div class="col-md-4 offset-md-4">
+                    <label for="keyword">Keyword:</label>
+                    <select class="form-control" id="keyword" name="keyword">
+                        {% for keyword in keywords %}
+                            <option value="{{ keyword }}" {% if selected_keyword == keyword %}selected{% endif %}>{{ keyword }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-3">Search</button>
+        </form>
+        <div class="row">
+            <div class="col-md-4 article-list">
+                {% for article in articles %}
+                    <div class="article-preview" data-content="{{ article.content }}" data-url="{{ article.url }}" data-publishedat="{{ article.publishedAt }}">
+                        <h5>{{ article.title }}</h5>
+                        <p><strong>Published At:</strong> {{ article.publishedAt }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="col-md-8">
+                <div class="article-details">
+                    <h3>Article Details</h3>
+                    <h5 id="article-title"></h5>
+                    <p><strong>Published At:</strong> <span id="article-publishedAt"></span></p>
+                    <div id="article-content"></div>
+                    <a href="" target="_blank" id="article-read-more">Read more</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $('.article-preview').click(function() {
+            $('.article-preview').removeClass('article-active');
+            $(this).addClass('article-active');
+            var articleTitle = $(this).find('h5').text();
+            var articleContent = $(this).data('content');
+            var articlePublishedAt = $(this).data('publishedat');
+            var articleReadMore = $(this).data('url');
+            $('#article-title').text(articleTitle);
+            $('#article-content').html(articleContent);
+            $('#article-publishedAt').text(articlePublishedAt);
+            $('#article-read-more').attr('href', articleReadMore);
+        });
+    </script>
+</body>
+</html>
