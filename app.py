@@ -14,8 +14,9 @@ app = Flask(__name__)
 NEWS_API_KEY = "c90bf5366948496b842fa35d8776398c"
 
 # Load the trained model
-model_filename = "sentiment_model.pkl"
-# model_filename = os.path.join("/home/Manhandle/Python-Anywhere-App", "sentiment_model.pkl")
+model_filename = os.path.join(
+    "/home/Manhandle/Python-Anywhere-App", "sentiment_model.pkl"
+)
 model = joblib.load(model_filename)
 print(f"Trained model loaded from '{model_filename}'")
 
@@ -40,12 +41,25 @@ def sentiment_to_category(sentiment_value):
         return "Very Positive"
 
 
-def fetch_articles(keyword=None, language="en"):
-    url = f"https://newsapi.org/v2/everything?apiKey={NEWS_API_KEY}&language={language}&pageSize=10"
-    if keyword:
-        url += f"&q={keyword}"
+def fetch_articles(country=None, category=None, sentiment=None):
+    print(
+        f"Fetching articles for country: {country} and category: {category}"
+    )  # Debug print
+
+    url = f"https://newsapi.org/v2/top-headlines?apiKey={NEWS_API_KEY}&pageSize=100"
+
+    if country and country != "":
+        url += f"&country={country}"
+
+    if category:
+        url += f"&category={category}"
+
+    # Add language parameter for English
+    url += "&language=en"
 
     response = requests.get(url)
+    print(f"Response status code: {response.status_code}")  # Debug print
+
     if response.status_code != 200:
         print("Failed to fetch articles:", response.status_code, response.text)
         return []
@@ -72,27 +86,43 @@ def fetch_articles(keyword=None, language="en"):
         reverse=True,
     )
 
-    return sorted_articles
+    # Filter articles based on the selected sentiment
+    if sentiment and sentiment != "All":
+        filtered_articles = [
+            article
+            for article in sorted_articles
+            if article["sentiment_category"] == sentiment
+        ]
+    else:
+        filtered_articles = sorted_articles
+
+    return filtered_articles
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    selected_keyword = ""
-    selected_language = "en"
-    selected_sentiment = "all"
+    selected_country = None
+    selected_category = None
+    selected_sentiment = None
     articles = []
 
     if request.method == "POST":
-        selected_keyword = request.form.get("keyword", "").strip() or None
-        selected_language = request.form.get("language", "en")
-        selected_sentiment = request.form.get("sentiment-filter", "all")
-        articles = fetch_articles(keyword=selected_keyword, language=selected_language)
+        selected_country = request.form.get("country", "").strip()
+        if selected_country == "":
+            selected_country = None  # Set to None if All/World selected
+        selected_category = request.form.get("category", "").strip() or None
+        selected_sentiment = request.form.get("sentiment-filter", "").strip() or None
+        articles = fetch_articles(
+            country=selected_country,
+            category=selected_category,
+            sentiment=selected_sentiment,
+        )
 
     return render_template(
         "index.html",
         articles=articles,
-        selected_keyword=selected_keyword,
-        selected_language=selected_language,
+        selected_country=selected_country,
+        selected_category=selected_category,
         selected_sentiment=selected_sentiment,
     )
 

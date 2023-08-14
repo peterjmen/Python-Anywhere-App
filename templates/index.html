@@ -31,26 +31,37 @@
     <div class="container-fluid py-4" style="background-color: #4CAF50;">
         <div class="container text-white">
             <h1>Sentifeed</h1>
-            <p>Search news by keyword and language</p>
+            <p>Search news by country, category, and sentiment</p>
         </div>
     </div>
     <div class="container my-2">
         <form method="POST" class="mb-4">
             <div class="row">
                 <div class="col-md-4">
-                    <label for="keyword">Keyword:</label>
-                    <input type="text" class="form-control" id="keyword" name="keyword" value="{{ selected_keyword }}">
-                </div>
-                <div class="col-md-4">
-                    <label for="language">Language:</label>
-                    <select class="form-control" id="language" name="language">
-                        <option value="en" {% if selected_language == "en" %}selected{% endif %}>English</option>
+                    <label for="country">Country:</label>
+                    <select class="form-control" id="country" name="country">
+                        <option value="" {% if not selected_country %}selected{% endif %}>All/World</option>
+                        <option value="us" {% if selected_country == "us" %}selected{% endif %}>United States</option>
+                        <option value="gb" {% if selected_country == "gb" %}selected{% endif %}>United Kingdom</option>
+                        <!-- Add more countries as needed -->
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="sentiment">Sentiment:</label>
-                    <select class="form-control" id="sentiment-filter">
-                        <option value="all">All</option>
+                    <label for="category">Category:</label>
+                    <select class="form-control" id="category" name="category">
+                        <option value="" {% if not selected_category %}selected{% endif %}>All</option>
+                        <option value="business" {% if selected_category == "business" %}selected{% endif %}>Business</option>
+                        <option value="entertainment" {% if selected_category == "entertainment" %}selected{% endif %}>Entertainment</option>
+                        <option value="health" {% if selected_category == "health" %}selected{% endif %}>Health</option>
+                        <option value="science" {% if selected_category == "science" %}selected{% endif %}>Science</option>
+                        <option value="sports" {% if selected_category == "sports" %}selected{% endif %}>Sports</option>
+                        <option value="technology" {% if selected_category == "technology" %}selected{% endif %}>Technology</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="sentiment-filter">Sentiment:</label>
+                    <select class="form-control" id="sentiment-filter" name="sentiment-filter">
+                        <option value="" {% if not selected_sentiment %}selected{% endif %}>All</option>
                         <option value="Very Negative" {% if selected_sentiment == "Very Negative" %}selected{% endif %}>Very Negative</option>
                         <option value="Negative" {% if selected_sentiment == "Negative" %}selected{% endif %}>Negative</option>
                         <option value="Neutral" {% if selected_sentiment == "Neutral" %}selected{% endif %}>Neutral</option>
@@ -58,8 +69,8 @@
                         <option value="Very Positive" {% if selected_sentiment == "Very Positive" %}selected{% endif %}>Very Positive</option>
                     </select>
                 </div>
-                <div class="col-md-4 align-self-end">
-                    <button type="submit" class="btn btn-success mt-3">Search</button>
+                <div class="col-md-12 mt-3">
+                    <button type="submit" class="btn btn-success">Search</button>
                 </div>
             </div>
         </form>
@@ -108,29 +119,15 @@
             $('#article-read-more').attr('href', articleReadMore);
         });
 
-        var selectedSentiment = localStorage.getItem('selectedSentiment');
-        if (selectedSentiment) {
-            $('#sentiment-filter').val(selectedSentiment);
-        }
+        document.querySelector("form").addEventListener("submit", function (e) {
+            var selectedCountry = document.querySelector("#country").value;
+            var selectedCategory = document.querySelector("#category").value;
 
-        $('#sentiment-filter').change(function() {
-        var selectedCategory = $(this).val();
-        localStorage.setItem('selectedSentiment', selectedCategory);
-
-        $('.article-preview').hide();
-        if (selectedCategory === 'all') {
-            $('.article-preview').show();
-        } else {
-            $('.article-preview[data-sentimentcategory="' + selectedCategory + '"]').show();
-        }
-    });
-
-    $('#sentiment-filter').change(); // Trigger the change event immediately
-</script>
-
-
-
-
-
+            if (selectedCountry === "" && selectedCategory === "") {
+                alert("You must select either a country or category. Both options cannot be 'All'.");
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+    </script>
 </body>
 </html>
