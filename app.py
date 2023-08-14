@@ -8,7 +8,6 @@ from flask import Flask, render_template, request
 import requests
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from newspaper import Article
 import joblib
 
 app = Flask(__name__)
@@ -40,17 +39,6 @@ def sentiment_to_category(sentiment_value):
         return "Very Positive"
 
 
-def fetch_article_content(article_url):
-    article_obj = Article(article_url)
-    try:
-        article_obj.download()
-        article_obj.parse()
-        return article_obj.text
-    except Exception as e:
-        print(f"Failed to download article from URL: {article_url}, error: {str(e)}")
-        return None
-
-
 def fetch_articles(keyword=None, language="en"):
     url = f"https://newsapi.org/v2/everything?apiKey={NEWS_API_KEY}&language={language}&pageSize=10"
     if keyword:
@@ -63,41 +51,22 @@ def fetch_articles(keyword=None, language="en"):
 
     articles = response.json().get("articles", [])
 
-    # Fetch article content concurrently
-    with ThreadPoolExecutor() as executor:
-        futures = [
-            executor.submit(fetch_article_content, article["url"])
-            for article in articles
-        ]
-        for idx, future in enumerate(futures):
-            result = future.result()
-            if result:
-                articles[idx]["content"] = result
-            else:
-                articles[idx]["content"] = "Failed to fetch content"
-
-    # Format the published date and filter out articles that failed to download
-    filtered_articles = []
+    # Format the published date and analyze sentiment
     for article in articles:
-        if article["content"] != "Failed to fetch content":
-            article["publishedAt"] = datetime.strptime(
-                article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"
-            ).strftime("%b %d, %Y %H:%M:%S")
+        article["content"] = article["content"] or "No content available"
+        article["publishedAt"] = datetime.strptime(
+            article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"
+        ).strftime("%b %d, %Y %H:%M:%S")
 
-            # Calculate sentiment weighting and category
-            sentiment_weighting = calculate_sentiment(article["content"])
-            sentiment_category = sentiment_to_category(sentiment_weighting)
+        sentiment_weighting = calculate_sentiment(article["content"])
+        sentiment_category = sentiment_to_category(sentiment_weighting)
 
-            article[
-                "sentiment_weighting"
-            ] = sentiment_weighting  # Rounded to 1 decimal place
-            article["sentiment_category"] = sentiment_category
+        article["sentiment_weighting"] = sentiment_weighting
+        article["sentiment_category"] = sentiment_category
 
-            filtered_articles.append(article)
-
-    # Sort articles by publishedAt in ascending order
+    # Sort articles by publishedAt in descending order
     sorted_articles = sorted(
-        filtered_articles,
+        articles,
         key=lambda x: datetime.strptime(x["publishedAt"], "%b %d, %Y %H:%M:%S"),
         reverse=True,
     )
@@ -106,40 +75,25 @@ def fetch_articles(keyword=None, language="en"):
 
 
 @app.route("/", methods=["GET", "POST"])
-@app.route("/", methods=["GET", "POST"])
 def index():
     selected_keyword = ""
     selected_language = "en"
-    selected_sentiment = "all"  # Add this line
+    selected_sentiment = "all"
     articles = []
-    sentiment_predictions = []  # List to store sentiment predictions for articles
 
     if request.method == "POST":
         selected_keyword = request.form.get("keyword", "").strip() or None
         selected_language = request.form.get("language", "en")
-        selected_sentiment = request.form.get(
-            "sentiment-filter", "all"
-        )  # Add this line
+        selected_sentiment = request.form.get("sentiment-filter", "all")
         articles = fetch_articles(keyword=selected_keyword, language=selected_language)
-
-        # Perform sentiment prediction for each article's content
-        for article in articles:
-            sentiment_prediction = model.predict([article["content"]])[0]
-            sentiment_predictions.append(sentiment_prediction)
-            article["sentiment"] = sentiment_prediction
 
     return render_template(
         "index.html",
         articles=articles,
-        sentiment_predictions=sentiment_predictions,
         selected_keyword=selected_keyword,
         selected_language=selected_language,
-        selected_sentiment=selected_sentiment,  # Add this line
+        selected_sentiment=selected_sentiment,
     )
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
 
 
 if __name__ == "__main__":
