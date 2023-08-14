@@ -31,22 +31,26 @@
     <div class="container-fluid py-4" style="background-color: #4CAF50;">
         <div class="container text-white">
             <h1>Sentifeed</h1>
-            <p>Search news by keyword</p>
+            <p>Search news by keyword and language</p>
         </div>
     </div>
     <div class="container my-2">
         <form method="POST" class="mb-4">
             <div class="row">
-                <div class="col-md-4 offset-md-4">
+                <div class="col-md-4">
                     <label for="keyword">Keyword:</label>
-                    <select class="form-control" id="keyword" name="keyword">
-                        {% for keyword in keywords %}
-                            <option value="{{ keyword }}" {% if selected_keyword == keyword %}selected{% endif %}>{{ keyword }}</option>
-                        {% endfor %}
+                    <input type="text" class="form-control" id="keyword" name="keyword" value="{{ selected_keyword }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="language">Language:</label>
+                    <select class="form-control" id="language" name="language">
+                        <option value="en" {% if selected_language == "en" %}selected{% endif %}>English</option>
                     </select>
                 </div>
+                <div class="col-md-4 align-self-end">
+                    <button type="submit" class="btn btn-success mt-3">Search</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-success mt-3">Search</button>
         </form>
         <div class="row">
             <div class="col-md-4 article-list">
