@@ -106,13 +106,6 @@
             $('#article-publishedAt').text(articlePublishedAt);
             $('#article-sentiment-weighting').text(sentimentWeighting.toFixed(1));
             $('#article-read-more').attr('href', articleReadMore);
-
-            // Update the sentiment filter to reflect the selected article's sentiment
-            var selectedSentimentCategory = $(this).data('sentimentcategory');
-            $('#sentiment-filter').val(selectedSentimentCategory);
-
-            // Trigger the change event of the sentiment filter
-            $('#sentiment-filter').change();
         });
 
         var selectedSentiment = localStorage.getItem('selectedSentiment');
