@@ -8,14 +8,17 @@ import os
 from flask import Flask, render_template, request
 import requests
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
 import joblib
 
 app = Flask(__name__)
 NEWS_API_KEY = "c90bf5366948496b842fa35d8776398c"
 
+# Define the absolute path to the model file
+model_filename = os.path.join(
+    "/home/Manhandle/Python-Anywhere-App", "sentiment_model.pkl"
+)
+
 # Load the trained model
-model_filename = "sentiment_model.pkl"
 model = joblib.load(model_filename)
 print(f"Trained model loaded from '{model_filename}'")
 
