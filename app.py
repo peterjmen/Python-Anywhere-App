@@ -1,11 +1,43 @@
+# ---------------------------------------------
+# TODO: Activate the virtual environment
+# ➡➡➡ source venv/Scripts/activate ⬅⬅⬅
+# ls -R > file_structure.txt
+# ---------------------------------------------
+
 from flask import Flask, render_template, request
 import requests
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from newspaper import Article
+import joblib
 
 app = Flask(__name__)
 NEWS_API_KEY = "c90bf5366948496b842fa35d8776398c"
+
+# Load the trained model
+model_filename = "sentiment_model.pkl"
+model = joblib.load(model_filename)
+print(f"Trained model loaded from '{model_filename}'")
+
+
+# Sentiment prediction
+def calculate_sentiment(text):
+    probs = model.predict_proba([text])
+    sentiment_value = 0 * probs[0][0] + 4 * probs[0][1]
+    return sentiment_value
+
+
+def sentiment_to_category(sentiment_value):
+    if sentiment_value <= 0.5:
+        return "Very Negative"
+    elif sentiment_value <= 1.5:
+        return "Negative"
+    elif sentiment_value <= 2.5:
+        return "Neutral"
+    elif sentiment_value <= 3.5:
+        return "Positive"
+    else:
+        return "Very Positive"
 
 
 def fetch_article_content(article_url):
@@ -51,6 +83,16 @@ def fetch_articles(keyword=None, language="en"):
             article["publishedAt"] = datetime.strptime(
                 article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"
             ).strftime("%b %d, %Y %H:%M:%S")
+
+            # Calculate sentiment weighting and category
+            sentiment_weighting = calculate_sentiment(article["content"])
+            sentiment_category = sentiment_to_category(sentiment_weighting)
+
+            article[
+                "sentiment_weighting"
+            ] = sentiment_weighting  # Rounded to 1 decimal place
+            article["sentiment_category"] = sentiment_category
+
             filtered_articles.append(article)
 
     # Sort articles by publishedAt in ascending order
@@ -64,22 +106,40 @@ def fetch_articles(keyword=None, language="en"):
 
 
 @app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def index():
     selected_keyword = ""
     selected_language = "en"
+    selected_sentiment = "all"  # Add this line
     articles = []
+    sentiment_predictions = []  # List to store sentiment predictions for articles
 
     if request.method == "POST":
         selected_keyword = request.form.get("keyword", "").strip() or None
         selected_language = request.form.get("language", "en")
+        selected_sentiment = request.form.get(
+            "sentiment-filter", "all"
+        )  # Add this line
         articles = fetch_articles(keyword=selected_keyword, language=selected_language)
+
+        # Perform sentiment prediction for each article's content
+        for article in articles:
+            sentiment_prediction = model.predict([article["content"]])[0]
+            sentiment_predictions.append(sentiment_prediction)
+            article["sentiment"] = sentiment_prediction
 
     return render_template(
         "index.html",
         articles=articles,
+        sentiment_predictions=sentiment_predictions,
         selected_keyword=selected_keyword,
         selected_language=selected_language,
+        selected_sentiment=selected_sentiment,  # Add this line
     )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 
 if __name__ == "__main__":

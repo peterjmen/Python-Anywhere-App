@@ -47,6 +47,17 @@
                         <option value="en" {% if selected_language == "en" %}selected{% endif %}>English</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="sentiment">Sentiment:</label>
+                    <select class="form-control" id="sentiment-filter">
+                        <option value="all">All</option>
+                        <option value="Very Negative" {% if selected_sentiment == "Very Negative" %}selected{% endif %}>Very Negative</option>
+                        <option value="Negative" {% if selected_sentiment == "Negative" %}selected{% endif %}>Negative</option>
+                        <option value="Neutral" {% if selected_sentiment == "Neutral" %}selected{% endif %}>Neutral</option>
+                        <option value="Positive" {% if selected_sentiment == "Positive" %}selected{% endif %}>Positive</option>
+                        <option value="Very Positive" {% if selected_sentiment == "Very Positive" %}selected{% endif %}>Very Positive</option>
+                    </select>
+                </div>
                 <div class="col-md-4 align-self-end">
                     <button type="submit" class="btn btn-success mt-3">Search</button>
                 </div>
@@ -55,9 +66,15 @@
         <div class="row">
             <div class="col-md-4 article-list">
                 {% for article in articles %}
-                    <div class="article-preview" data-content="{{ article.content }}" data-url="{{ article.url }}" data-publishedat="{{ article.publishedAt }}">
+                    <div class="article-preview"
+                         data-content="{{ article.content }}"
+                         data-url="{{ article.url }}"
+                         data-publishedat="{{ article.publishedAt }}"
+                         data-sentimentweighting="{{ article.sentiment_weighting }}"
+                         data-sentimentcategory="{{ article.sentiment_category }}">
                         <h5>{{ article.title }}</h5>
                         <p><strong>Published At:</strong> {{ article.publishedAt }}</p>
+                        <p><strong>Sentiment Category:</strong> {{ article.sentiment_category }}</p>
                     </div>
                 {% endfor %}
             </div>
@@ -66,6 +83,7 @@
                     <h3>Article Details</h3>
                     <h5 id="article-title"></h5>
                     <p><strong>Published At:</strong> <span id="article-publishedAt"></span></p>
+                    <p><strong>Sentiment Weighting:</strong> <span id="article-sentiment-weighting"></span></p>
                     <div id="article-content"></div>
                     <a href="" target="_blank" id="article-read-more">Read more</a>
                 </div>
@@ -82,11 +100,46 @@
             var articleContent = $(this).data('content');
             var articlePublishedAt = $(this).data('publishedat');
             var articleReadMore = $(this).data('url');
+            var sentimentWeighting = $(this).data('sentimentweighting');
             $('#article-title').text(articleTitle);
             $('#article-content').html(articleContent);
             $('#article-publishedAt').text(articlePublishedAt);
+            $('#article-sentiment-weighting').text(sentimentWeighting.toFixed(1));
             $('#article-read-more').attr('href', articleReadMore);
+
+            // Update the sentiment filter to reflect the selected article's sentiment
+            var selectedSentimentCategory = $(this).data('sentimentcategory');
+            $('#sentiment-filter').val(selectedSentimentCategory);
+
+            // Trigger the change event of the sentiment filter
+            $('#sentiment-filter').change();
         });
-    </script>
+
+        var selectedSentiment = localStorage.getItem('selectedSentiment');
+        if (selectedSentiment) {
+            $('#sentiment-filter').val(selectedSentiment);
+        }
+
+        $('#sentiment-filter').change(function() {
+        var selectedCategory = $(this).val();
+        localStorage.setItem('selectedSentiment', selectedCategory);
+
+        $('.article-preview').hide();
+        if (selectedCategory === 'all') {
+            $('.article-preview').show();
+        } else {
+            $('.article-preview[data-sentimentcategory="' + selectedCategory + '"]').show();
+        }
+    });
+
+    $('#sentiment-filter').change(); // Trigger the change event immediately
+</script>
+Make sure to keep the rest of your code unchanged. Now, the sentiment filter will automatically be applied every time you search for articles, reflecting the stored or default sentiment selection without the need to change the selection in the dropdown menu manually.
+
+
+
+
+
+
 </body>
 </html>
