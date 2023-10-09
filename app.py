@@ -9,16 +9,49 @@ from flask import Flask, render_template, request
 import requests
 from datetime import datetime
 import joblib
+import mysql.connector
+
+db_config = {
+    "user": "Manhandle",
+    "password": "givemedata",
+    "host": "Manhandle.mysql.pythonanywhere-services.com",
+    "database": "Manhandle$pdbase",
+    "raise_on_warnings": True
+}
+
 
 app = Flask(__name__)
 NEWS_API_KEY = "c90bf5366948496b842fa35d8776398c"
 
 # Load the trained model
-model_filename = os.path.join(
-    "/home/Manhandle/Python-Anywhere-App", "sentiment_model.pkl"
-)
+# model_filename = os.path.join(
+#     "/home/Manhandle/Python-Anywhere-App", "sentiment_model.pkl"
+
+
+# if sentiment_model.pkl is in the same directory  script
+model_filename = os.path.join(os.path.dirname(__file__), "sentiment_model.pkl")
+
+
 model = joblib.load(model_filename)
 print(f"Trained model loaded from '{model_filename}'")
+
+# send info to database
+def insert_sentiment_to_db(sentiment, sentiment_value, article_headline):
+    cursor = None
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        query = "INSERT INTO sentifeed_data(sentiment, sentiment_value, article_headline) VALUES (%s, %s, %s)"
+        cursor.execute(query, (sentiment, sentiment_value, article_headline))
+        conn.commit()
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 # Sentiment prediction
@@ -125,6 +158,27 @@ def index():
         selected_category=selected_category,
         selected_sentiment=selected_sentiment,
     )
+
+@app.route("/submit-rating", methods=["POST"])
+def submit_rating():
+    try:
+        sentiment = request.form["sentiment"]
+        article_title = request.form["article_title"]
+
+        sentiment_map = {
+            "Very Positive": 4,
+            "Positive": 3,
+            "Neutral": 2,
+            "Negative": 1,
+            "Very Negative": 0
+        }
+
+        insert_sentiment_to_db(sentiment, sentiment_map[sentiment], article_title)
+        return "Rating submitted!", 200
+
+    except Exception as e:
+        print(f"Error encountered: {e}")
+        return "An error occurred while processing your request.", 500
 
 
 if __name__ == "__main__":

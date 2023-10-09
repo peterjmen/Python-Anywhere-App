@@ -25,6 +25,9 @@
         .article-active {
             background-color: #f0f0f0;
         }
+        .article-details {
+            display: none; /* Initially hide the rating section */
+        }
     </style>
 </head>
 <body>
@@ -97,6 +100,16 @@
                     <p><strong>Sentiment Weighting:</strong> <span id="article-sentiment-weighting"></span></p>
                     <div id="article-content"></div>
                     <a href="" target="_blank" id="article-read-more">Read more</a>
+                    <hr>
+                    <label for="user-sentiment">Rate the title:</label>
+                    <select id="user-sentiment" class="form-control mb-2">
+                        <option value="Very Positive">Very Positive</option>
+                        <option value="Positive">Positive</option>
+                        <option value="Neutral">Neutral</option>
+                        <option value="Negative">Negative</option>
+                        <option value="Very Negative">Very Negative</option>
+                    </select>
+                    <button id="submit-rating" class="btn btn-primary">Submit Rating</button>
                 </div>
             </div>
         </div>
@@ -117,6 +130,9 @@
             $('#article-publishedAt').text(articlePublishedAt);
             $('#article-sentiment-weighting').text(sentimentWeighting.toFixed(1));
             $('#article-read-more').attr('href', articleReadMore);
+            
+            // Show the rating section
+            $('.article-details').show();
         });
 
         document.querySelector("form").addEventListener("submit", function (e) {
@@ -128,6 +144,17 @@
                 e.preventDefault(); // Prevent form submission
             }
         });
+
+        $("#submit-rating").click(function(e) {
+            e.preventDefault();
+            const sentiment = $("#user-sentiment").val();
+            const articleTitle = $("#article-title").text();
+            
+            $.post("/submit-rating", { sentiment: sentiment, article_title: articleTitle }, function(data) {
+                alert(data);
+            });
+        });
+
     </script>
 </body>
 </html>
