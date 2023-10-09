@@ -10,14 +10,29 @@ import requests
 from datetime import datetime
 import joblib
 import mysql.connector
+from decouple import config
 
+# Aiven config:
 db_config = {
-    "user": "Manhandle",
-    "password": "givemedata",
-    "host": "Manhandle.mysql.pythonanywhere-services.com",
-    "database": "Manhandle$pdbase",
-    "raise_on_warnings": True
+    "host": "mysql-pete-dbase-peterjmen-5ed9.aivencloud.com",
+    "port": 25774,
+    "user": "avnadmin",
+    "password": config("DB_PASSWORD"),  # Reading from .env file
+    "database": "defaultdb",
+    "ssl_ca": "/path/to/your/aiven_ca.pem",
 }
+
+
+
+
+# pythonanywhere info:
+# db_config = {
+#     "user": "Manhandle",
+#     "password": "givemedata",
+#     "host": "Manhandle.mysql.pythonanywhere-services.com",
+#     "database": "Manhandle$pdbase",
+#     "raise_on_warnings": True
+# }
 
 
 app = Flask(__name__)
@@ -42,7 +57,7 @@ def insert_sentiment_to_db(sentiment, sentiment_value, article_headline):
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-        query = "INSERT INTO sentifeed_data(sentiment, sentiment_value, article_headline) VALUES (%s, %s, %s)"
+        query = "INSERT INTO sentifeed(sentiment, sentiment_value, article_headline) VALUES (%s, %s, %s)"
         cursor.execute(query, (sentiment, sentiment_value, article_headline))
         conn.commit()
     except mysql.connector.Error as err:

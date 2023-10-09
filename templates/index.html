@@ -65,11 +65,11 @@
                     <label for="sentiment-filter">Sentiment:</label>
                     <select class="form-control" id="sentiment-filter" name="sentiment-filter">
                         <option value="" {% if not selected_sentiment %}selected{% endif %}>All</option>
-                        <option value="Very Negative" {% if selected_sentiment == "Very Negative" %}selected{% endif %}>Very Negative</option>
-                        <option value="Negative" {% if selected_sentiment == "Negative" %}selected{% endif %}>Negative</option>
-                        <option value="Neutral" {% if selected_sentiment == "Neutral" %}selected{% endif %}>Neutral</option>
-                        <option value="Positive" {% if selected_sentiment == "Positive" %}selected{% endif %}>Positive</option>
-                        <option value="Very Positive" {% if selected_sentiment == "Very Positive" %}selected{% endif %}>Very Positive</option>
+                        <option value="very negative" {% if selected_sentiment == "very negative" %}selected{% endif %}>Very Negative</option>
+                        <option value="negative" {% if selected_sentiment == "negative" %}selected{% endif %}>Negative</option>
+                        <option value="neutral" {% if selected_sentiment == "neutral" %}selected{% endif %}>Neutral</option>
+                        <option value="positive" {% if selected_sentiment == "positive" %}selected{% endif %}>Positive</option>
+                        <option value="very positive" {% if selected_sentiment == "very positive" %}selected{% endif %}>Very Positive</option>
                     </select>
                 </div>
                 <div class="col-md-12 mt-3">
